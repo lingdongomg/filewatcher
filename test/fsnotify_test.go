@@ -12,7 +12,11 @@ func TestFsnotify(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer watcher.Close()
+	defer func(watcher *fsnotify.Watcher) {
+		err := watcher.Close()
+		if err != nil {
+		}
+	}(watcher)
 
 	// Start listening for events.
 	go func() {

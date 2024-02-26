@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -12,6 +13,7 @@ type MultiWatcher struct {
 	watcher   *fsnotify.Watcher
 	paths     map[string]bool
 	snapshots map[string]*FileSnapshot
+	wg        sync.WaitGroup
 }
 
 func NewMultiWatcher() (*MultiWatcher, error) {
@@ -40,17 +42,20 @@ func fileChangeHandler(multiWatcher *MultiWatcher) {
 				return
 			}
 
+			multiWatcher.wg.Add(2)
 			if !pending {
 				pending = true
 				timer = time.AfterFunc(5*time.Second, func() {
 					eventCh <- true
 				})
 			} else {
+				multiWatcher.wg.Done()
 				timer.Stop()
 				timer = time.AfterFunc(5*time.Second, func() {
 					eventCh <- true
 				})
 			}
+			multiWatcher.wg.Done()
 
 		case err, ok := <-multiWatcher.watcher.Errors:
 			if !ok {
@@ -60,6 +65,7 @@ func fileChangeHandler(multiWatcher *MultiWatcher) {
 			log.Println("Listen for error pipeline discovery:", err)
 
 		case <-eventCh:
+			// multiWatcher.wg.Add(1)
 			pending = false
 			log.Println("File change event handling")
 			for path := range multiWatcher.paths {
@@ -92,6 +98,7 @@ func fileChangeHandler(multiWatcher *MultiWatcher) {
 					}
 				}
 			}
+			multiWatcher.wg.Done()
 		}
 	}
 }
@@ -148,6 +155,7 @@ func (mw *MultiWatcher) Close() error {
 			log.Println("error removing", path, ":", err)
 		}
 	}
+	mw.wg.Wait() // Wait for all events to be handled
 	log.Println("Close one watcher")
 	return mw.watcher.Close()
 }
