@@ -170,3 +170,120 @@ func TestDirMove(t *testing.T) {
 		return
 	}
 }
+
+func TestAddPath(t *testing.T) {
+	callback := &MyCallback{}
+	filewatcher.SetPathCallback(callback)
+	multiWatcher, _ := filewatcher.NewMultiWatcher()
+	err := multiWatcher.Add(testPath + "\\1")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	err = multiWatcher.Add(testPath + "\\1")
+	if err != nil {
+		return
+	}
+
+	err = multiWatcher.Add(testPath + "\\2")
+	if err != nil {
+		return
+	}
+
+	file1 := testPath + "\\1\\1.jpg"
+	if _, err := os.Stat(file1); err == nil {
+		// 如果文件存在
+		err := os.Remove(file1)
+		if err != nil {
+			// 如果删除文件失败
+			panic(err)
+		}
+	}
+
+	// 如果 C:\photo-patchouli\temp\2 不存在文件2.jpg，则创建文件2.jpg
+	file2 := testPath + "\\2\\2.jpg"
+	if _, err := os.Stat(file2); os.IsNotExist(err) {
+		// 如果文件不存在
+		file, err := os.Create(file2)
+		err = file.Close()
+		if err != nil {
+			return
+		}
+		if err != nil {
+			// 如果创建文件失败
+			panic(err)
+		}
+	}
+
+	// 将文件1.jpg移动到C:\photo-patchouli\temp\2
+	err = os.Rename(testPath+"\\2\\2.jpg", testPath+"\\1\\1.jpg")
+	if err != nil {
+		log.Println(err)
+	}
+
+	time.Sleep(7 * time.Second)
+	err = multiWatcher.Close()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+func TestClosePath(t *testing.T) {
+	file1 := testPath + "\\1\\1.jpg"
+	if _, err := os.Stat(file1); err == nil {
+		// 如果文件存在
+		err := os.Remove(file1)
+		if err != nil {
+			// 如果删除文件失败
+			panic(err)
+		}
+	}
+
+	// 如果 C:\photo-patchouli\temp\2 不存在文件2.jpg，则创建文件2.jpg
+	file2 := testPath + "\\2\\2.jpg"
+	if _, err := os.Stat(file2); os.IsNotExist(err) {
+		// 如果文件不存在
+		file, err := os.Create(file2)
+		err = file.Close()
+		if err != nil {
+			return
+		}
+		if err != nil {
+			// 如果创建文件失败
+			panic(err)
+		}
+	}
+
+	callback := &MyCallback{}
+	filewatcher.SetPathCallback(callback)
+	multiWatcher, _ := filewatcher.NewMultiWatcher()
+	err := multiWatcher.Add(testPath + "\\1")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	err = multiWatcher.Add(testPath + "\\2")
+	if err != nil {
+		return
+	}
+
+	err = multiWatcher.Remove(testPath + "\\2")
+	if err != nil {
+		return
+	}
+
+	// 将文件1.jpg移动到C:\photo-patchouli\temp\2
+	err = os.Rename(testPath+"\\2\\2.jpg", testPath+"\\1\\1.jpg")
+	if err != nil {
+		log.Println(err)
+	}
+
+	err = multiWatcher.Close()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+}

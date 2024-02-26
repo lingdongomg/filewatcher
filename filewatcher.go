@@ -139,6 +139,7 @@ func (mw *MultiWatcher) Remove(path string) error {
 	if _, ok := mw.paths[path]; !ok {
 		return nil
 	}
+	mw.wg.Wait()
 	err := mw.watcher.Remove(path)
 	if err != nil {
 		return err
