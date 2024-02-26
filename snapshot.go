@@ -53,33 +53,6 @@ func buildTree(node *FileNode, path string) {
 	}
 }
 
-//func (fs *FileSnapshot) add(path string, isDir bool) {
-//	parts := filepath.SplitList(path)
-//	currentNode := fs.Root
-//
-//	for _, part := range parts {
-//		found := false
-//		for _, child := range currentNode.Children {
-//			if child.Name == part {
-//				currentNode = child
-//				found = true
-//				break
-//			}
-//		}
-//
-//		if !found {
-//			absPath := filepath.Join(currentNode.AbsPath, part)
-//			childNode := newFileNode(part, absPath, isDir)
-//			currentNode.Children = append(currentNode.Children, childNode)
-//			currentNode = childNode
-//		}
-//	}
-//}
-
-func (fs *FileSnapshot) update() {
-	buildTree(fs.Root, fs.Root.AbsPath)
-}
-
 type Diff struct {
 	AbsPath string
 	Op      int // 0: file/directory deleted, 1: new file/directory, 2: file modified
@@ -117,7 +90,12 @@ func handleNode(node *FileNode, op int) []Diff {
 	var diffs []Diff
 	absPath := node.AbsPath
 	for _, child := range node.Children {
-		childDiffs := diffNodes(child, nil)
+		var childDiffs []Diff
+		if op == 0 {
+			childDiffs = diffNodes(child, nil)
+		} else if op == 1 {
+			childDiffs = diffNodes(nil, child)
+		}
 		diffs = append(diffs, childDiffs...)
 	}
 	diffs = append(diffs, Diff{

@@ -19,24 +19,24 @@ func NewMultiWatcher() (*MultiWatcher, error) {
 	if err != nil {
 		return nil, err
 	}
-	multichar := &MultiWatcher{
+	multiWatcher := &MultiWatcher{
 		watcher:   watcher,
 		paths:     make(map[string]bool),
 		snapshots: make(map[string]*FileSnapshot),
 	}
-	go fileChangeHandler(multichar)
-	return multichar, nil
+	go fileChangeHandler(multiWatcher)
+	return multiWatcher, nil
 }
 
-func fileChangeHandler(multichar *MultiWatcher) {
+func fileChangeHandler(multiWatcher *MultiWatcher) {
 	pending := false
 	eventCh := make(chan bool, 1)
 	var timer *time.Timer
 	for {
 		select {
-		case _, ok := <-multichar.watcher.Events:
+		case _, ok := <-multiWatcher.watcher.Events:
 			if !ok {
-				log.Println("关闭监听事件管道")
+				log.Println("Close the listening event pipeline")
 				return
 			}
 
@@ -52,40 +52,41 @@ func fileChangeHandler(multichar *MultiWatcher) {
 				})
 			}
 
-		case err, ok := <-multichar.watcher.Errors:
+		case err, ok := <-multiWatcher.watcher.Errors:
 			if !ok {
-				log.Println("关闭监听错误管道")
+				log.Println("Close the pipeline listening for errors")
 				return
 			}
-			log.Println("监听错误管道发现:", err)
+			log.Println("Listen for error pipeline discovery:", err)
 
 		case <-eventCh:
 			pending = false
-			log.Println("文件变化事件处理")
-			for path := range multichar.paths {
-				snapshot := multichar.snapshots[path]
+			log.Println("File change event handling")
+			for path := range multiWatcher.paths {
+				snapshot := multiWatcher.snapshots[path]
 				newSnapshot := NewFileSnapshot(path)
 				diffs := snapshot.Diff(newSnapshot)
 				if len(diffs) > 0 {
-					multichar.snapshots[path] = newSnapshot
+					multiWatcher.snapshots[path] = newSnapshot
 					for _, diff := range diffs {
-						log.Println("文件变化：", diff)
+						log.Println("File Change:", diff)
 						if cb != nil {
 							cbe := CallBackEvent{Path: diff.AbsPath, Op: diff.Op}
 							cb.OnPathChanged(cbe)
 						} else {
-							log.Println("没有回调函数")
+							log.Println("No callback function")
 						}
 						// 如果diff.AbsPath是文件夹，将其添加到watcher的监听路径
 						fileInfo, err := os.Stat(diff.AbsPath)
 						if err != nil {
-							log.Println("获取文件信息失败:", err)
 							continue
 						}
 						if fileInfo.IsDir() {
-							err := multichar.watcher.Add(diff.AbsPath)
+							err := multiWatcher.watcher.Add(diff.AbsPath)
 							if err != nil {
-								log.Println("添加目录到监听路径失败:", err)
+								log.Println("Failed to add directory to listening path:", err)
+							} else {
+								log.Println("Add a listening path:", diff.AbsPath)
 							}
 						}
 					}
@@ -118,10 +119,10 @@ func traverseDir(watcher *fsnotify.Watcher, path string) {
 		fp := filepath.Join(path, file.Name())
 		if file.IsDir() {
 			err := watcher.Add(fp)
-			log.Println("添加目录：", fp)
 			if err != nil {
 				return
 			}
+			log.Println("Adding a listening path:", fp)
 			traverseDir(watcher, fp)
 		}
 	}
@@ -147,5 +148,6 @@ func (mw *MultiWatcher) Close() error {
 			log.Println("error removing", path, ":", err)
 		}
 	}
+	log.Println("Close one watcher")
 	return mw.watcher.Close()
 }
