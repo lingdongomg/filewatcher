@@ -1,4 +1,4 @@
-module photowatcher
+module filewatcher
 
 go 1.21
 

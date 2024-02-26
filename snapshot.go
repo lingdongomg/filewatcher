@@ -1,4 +1,4 @@
-package photowatcher
+package filewatcher
 
 import (
 	"log"

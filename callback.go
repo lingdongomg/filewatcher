@@ -1,4 +1,4 @@
-package photowatcher
+package filewatcher
 
 type CallBackEvent struct {
 	Path string

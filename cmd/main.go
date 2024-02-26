@@ -1,19 +1,21 @@
 package main
 
-import "log"
-import "photowatcher"
+import (
+	"filewatcher"
+	"log"
+)
 
 type MyCallback struct{}
 
-func (cb *MyCallback) OnPathChanged(cbe photowatcher.CallBackEvent) {
+func (cb *MyCallback) OnPathChanged(cbe filewatcher.CallBackEvent) {
 	log.Println("CallBack:", cbe.Path, cbe.Op)
 }
 
 func main() {
 	callback := &MyCallback{}
-	photowatcher.SetPathCallback(callback)
+	filewatcher.SetPathCallback(callback)
 
-	multiWatcher, _ := photowatcher.NewMultiWatcher()
+	multiWatcher, _ := filewatcher.NewMultiWatcher()
 	err := multiWatcher.Add("C:\\photo-patchouli\\temp")
 	if err != nil {
 		log.Println(err)
