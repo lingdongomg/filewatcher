@@ -15,7 +15,7 @@ var testPath = `C:\photo-patchouli\temp`
 type MyCallback struct{}
 
 func (cb *MyCallback) OnPathChanged(cbe filewatcher.CallBackEvent) {
-	log.Println("CallBack:", cbe.Path, cbe.Op)
+	log.Println("CallBack:", cbe.Path, cbe.Op, cbe.Size, cbe.ModTime)
 }
 
 func TestFileWatcher(t *testing.T) {

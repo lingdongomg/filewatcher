@@ -8,7 +8,7 @@ import (
 type MyCallback struct{}
 
 func (cb *MyCallback) OnPathChanged(cbe filewatcher.CallBackEvent) {
-	log.Println("CallBack:", cbe.Path, cbe.Op)
+	log.Println("CallBack:", cbe.Path, cbe.Op, cbe.Size, cbe.ModTime)
 }
 
 func main() {

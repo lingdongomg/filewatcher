@@ -82,7 +82,7 @@ func fileChangeHandler(multiWatcher *MultiWatcher) {
 					for _, diff := range diffs {
 						log.Println("File Change:", diff)
 						if cb != nil {
-							cbe := CallBackEvent{Path: diff.AbsPath, Op: diff.Op}
+							cbe := CallBackEvent{Path: diff.AbsPath, Op: diff.Op, Size: diff.Size, ModTime: diff.ModTime}
 							cb.OnPathChanged(cbe)
 						} else {
 							log.Println("No callback function")
