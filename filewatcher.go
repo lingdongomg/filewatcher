@@ -65,7 +65,6 @@ func fileChangeHandler(multiWatcher *MultiWatcher) {
 			log.Println("Listen for error pipeline discovery:", err)
 
 		case <-eventCh:
-			// multiWatcher.wg.Add(1)
 			pending = false
 			log.Println("File change event handling")
 			for path := range multiWatcher.paths {
@@ -136,10 +135,10 @@ func traverseDir(watcher *fsnotify.Watcher, path string) {
 }
 
 func (mw *MultiWatcher) Remove(path string) error {
+	mw.wg.Wait()
 	if _, ok := mw.paths[path]; !ok {
 		return nil
 	}
-	mw.wg.Wait()
 	err := mw.watcher.Remove(path)
 	if err != nil {
 		return err
@@ -150,13 +149,13 @@ func (mw *MultiWatcher) Remove(path string) error {
 }
 
 func (mw *MultiWatcher) Close() error {
+	mw.wg.Wait()
 	for path := range mw.paths {
 		err := mw.Remove(path)
 		if err != nil {
 			log.Println("error removing", path, ":", err)
 		}
 	}
-	mw.wg.Wait() // Wait for all events to be handled
 	log.Println("Close one watcher")
 	return mw.watcher.Close()
 }
