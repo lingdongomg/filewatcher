@@ -34,6 +34,12 @@ func fileChangeHandler(multiWatcher *MultiWatcher) {
 	pending := false
 	eventCh := make(chan bool, 1)
 	var timer *time.Timer
+	defer func() {
+		if r := recover(); r != nil {
+			// 处理panic错误，可以打印日志或执行其他操作
+			log.Println("Recovered from panic:", r)
+		}
+	}()
 	for {
 		select {
 		case _, ok := <-multiWatcher.watcher.Events:
