@@ -56,6 +56,8 @@ func buildTree(node *FileNode, path string) {
 type Diff struct {
 	AbsPath string
 	Op      int // 0: file/directory deleted, 1: new file/directory, 2: file modified
+	Size    int64
+	ModTime int64
 }
 
 func (fs *FileSnapshot) Diff(fs2 *FileSnapshot) []Diff {
@@ -101,6 +103,8 @@ func handleNode(node *FileNode, op int) []Diff {
 	diffs = append(diffs, Diff{
 		AbsPath: absPath,
 		Op:      op,
+		Size:    node.Size,
+		ModTime: node.ModTime,
 	})
 	return diffs
 }
