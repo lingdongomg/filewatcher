@@ -1,4 +1,4 @@
-module filewatcher
+module github.com/lingdongomg/filewatcher
 
 go 1.21
 
